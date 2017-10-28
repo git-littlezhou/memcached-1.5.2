@@ -47,10 +47,13 @@ typedef struct {
     rel_time_t evicted_time;
 } itemstats_t;
 
+// 分配出去的item双向链表，按最后访问时间排序，相当了LRU队列
 static item *heads[LARGEST_ID];
 static item *tails[LARGEST_ID];
 static itemstats_t itemstats[LARGEST_ID];
+// hash桶下链表的item个数
 static unsigned int sizes[LARGEST_ID];
+// hash桶下链表所有item的总大小
 static uint64_t sizes_bytes[LARGEST_ID];
 static unsigned int *stats_sizes_hist = NULL;
 static uint64_t stats_sizes_cas_min = 0;
@@ -404,7 +407,7 @@ static void item_link_q_warm(item *it) {
     itemstats[it->slabs_clsid].moves_to_warm++;
     pthread_mutex_unlock(&lru_locks[it->slabs_clsid]);
 }
-
+//将item从LRU队列中删除，并更新对就hash桶下链表的长度和总的item大小
 static void do_item_unlink_q(item *it) {
     item **head, **tail;
     head = &heads[it->slabs_clsid];
@@ -455,7 +458,7 @@ int do_item_link(item *it, const uint32_t hv) {
 
     return 1;
 }
-
+//回收item，将item从hash表，LRU队列中删除，并归还给SLAB
 void do_item_unlink(item *it, const uint32_t hv) {
     MEMCACHED_ITEM_UNLINK(ITEM_key(it), it->nkey, it->nbytes);
     if ((it->it_flags & ITEM_LINKED) != 0) {
@@ -958,6 +961,7 @@ item *do_item_get(const char *key, const size_t nkey, const uint32_t hv, conn *c
 
     if (it != NULL) {
         was_found = 1;
+		// 如果item因一些原因需要淘汰掉
         if (item_is_flushed(it)) {
             do_item_unlink(it, hv);
             do_item_remove(it);
@@ -969,6 +973,7 @@ item *do_item_get(const char *key, const size_t nkey, const uint32_t hv, conn *c
                 fprintf(stderr, " -nuked by flush");
             }
             was_found = 2;
+		// 如果item因超时需要淘汰掉
         } else if (it->exptime != 0 && it->exptime <= current_time) {
             do_item_unlink(it, hv);
             do_item_remove(it);
@@ -981,6 +986,7 @@ item *do_item_get(const char *key, const size_t nkey, const uint32_t hv, conn *c
             }
             was_found = 3;
         } else {
+			// 符合更新时间间隔的情况下，更新item的访问时间并移到LRU链表表头
             if (do_update) {
                 /* We update the hit markers only during fetches.
                  * An item needs to be hit twice overall to be considered

@@ -531,7 +531,9 @@ item *item_get(const char *key, const size_t nkey, conn *c, const bool do_update
     item *it;
     uint32_t hv;
     hv = hash(key, nkey);
+	// 锁住对应的hash桶
     item_lock(hv);
+	// 做实际的查找和更新操作
     it = do_item_get(key, nkey, hv, c, do_update);
     item_unlock(hv);
     return it;

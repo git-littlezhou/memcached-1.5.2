@@ -15,7 +15,7 @@ int cache_error = 0;
 #endif
 
 const int initial_pool_size = 64;
-
+// 创建cache，指定缓存块的大小bufsize，以一个空闲列表的方式维护空闲的缓存块
 cache_t* cache_create(const char *name, size_t bufsize, size_t align,
                       cache_constructor_t* constructor,
                       cache_destructor_t* destructor) {
@@ -75,7 +75,7 @@ void* cache_alloc(cache_t *cache) {
     pthread_mutex_unlock(&cache->mutex);
     return ret;
 }
-
+// 从cache中申请一段固定大小(cache->bufsize)的内存，如果空闲列表中有空闲的，从空闲列表末尾拿一个返回，否则malloc一段新的内存
 void* do_cache_alloc(cache_t *cache) {
     void *ret;
     void *object;
@@ -114,7 +114,7 @@ void cache_free(cache_t *cache, void *ptr) {
     do_cache_free(cache, ptr);
     pthread_mutex_unlock(&cache->mutex);
 }
-
+// 回收内存，空闲列表还没满，将归还的内存放到空闲列表末尾，如果空闲列表已经满，尝试扩容，成功则将内存放到列表末尾，不成功则free掉内存
 void do_cache_free(cache_t *cache, void *ptr) {
 #ifndef NDEBUG
     /* validate redzone... */
