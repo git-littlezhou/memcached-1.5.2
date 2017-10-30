@@ -3389,7 +3389,9 @@ static inline void process_get_command(conn *c, token_t *tokens, size_t ntokens,
                   }
                   si++;
                   nbytes = it->nbytes;
+				  // 格式化后缀: " flag data-length cas(if need)\r\n"
                   int suffix_len = make_ascii_get_suffix(suffix, it, return_cas, nbytes);
+				  // 按协议格式将数据放到输出缓冲区
                   if (add_iov(c, "VALUE ", 6) != 0 ||
                       add_iov(c, ITEM_key(it), it->nkey) != 0 ||
                       (settings.inline_ascii_response && add_iov(c, ITEM_suffix(it), it->nsuffix - 2) != 0) ||
@@ -3398,8 +3400,10 @@ static inline void process_get_command(conn *c, token_t *tokens, size_t ntokens,
                           item_remove(it);
                           break;
                       }
+				  // 如果item的data部分放的是实际的数据，添加到输出缓冲
                   if ((it->it_flags & ITEM_CHUNKED) == 0) {
                       add_iov(c, ITEM_data(it), it->nbytes);
+				  // 如果item的data部分放的是多个item组成的链表，遍历item链表，将每个item的data添加到输出缓冲，data的总长度为it->nbytes
                   } else if (add_chunked_item_iovs(c, it, it->nbytes) != 0) {
                       item_remove(it);
                       break;
@@ -3417,6 +3421,7 @@ static inline void process_get_command(conn *c, token_t *tokens, size_t ntokens,
                       }
                   if ((it->it_flags & ITEM_CHUNKED) == 0)
                       {
+					  // item的data部分存有格式化的" flag data-length\r\ndata"
                           if (add_iov(c, ITEM_suffix(it), it->nsuffix + it->nbytes) != 0)
                           {
                               item_remove(it);
@@ -3462,6 +3467,7 @@ static inline void process_get_command(conn *c, token_t *tokens, size_t ntokens,
          * If the command string hasn't been fully processed, get the next set
          * of tokens.
          */
+		// 如果有的话，继续解析后续的key，并继续处理(get命令可以一次get很多个key，但协议解析的时候一次最多解析出MAX_TOKENS个key)
         if(key_token->value != NULL) {
             ntokens = tokenize_command(key_token->value, tokens, MAX_TOKENS);
             key_token = tokens;
