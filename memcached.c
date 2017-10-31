@@ -4710,7 +4710,7 @@ static enum transmit_result transmit(conn *c) {
            we have a real error, on which we close the connection */
         if (settings.verbose > 0)
             perror("Failed to write, and not due to blocking");
-
+		// 如果到达这里，说明真的出现了错误，需要关闭连接
         if (IS_UDP(c->transport))
             conn_set_state(c, conn_read);
         else
