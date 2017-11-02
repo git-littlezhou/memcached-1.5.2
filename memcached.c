@@ -4862,7 +4862,7 @@ static void drive_machine(conn *c) {
                     break;
                 }
             }
-
+			// 太多连接的话，自动拒绝连接
             if (settings.maxconns_fast &&
                 stats_state.curr_conns + stats_state.reserved_fds >= settings.maxconns - 1) {
                 str = "ERROR Too many open connections\r\n";

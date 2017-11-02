@@ -298,6 +298,9 @@ void accept_new_conns(const bool do_accept) {
 
 /*
  * Set up a thread's information.
+ * 初始化worker线程相关信息，将注册用于通知的描述符的读事件到线程的event_loop中，
+ * 接入线程收到新的连接的时候会将新连接的信息放到cq_item队列中，并通过向通知描述
+ * 符中写入一字节数据通知worker线程有新的连接来了
  */
 static void setup_thread(LIBEVENT_THREAD *me) {
     me->base = event_init();
@@ -365,6 +368,7 @@ static void *worker_libevent(void *arg) {
 /*
  * Processes an incoming "handle a new connection" item. This is called when
  * input arrives on the libevent wakeup pipe.
+ * 从cq_item队列拿新连接的信息，并往线程的event_loop中注册事件，回调函数为event_handler，在event_handler中会调用drive_machine处理用户请求逻辑
  */
 static void thread_libevent_process(int fd, short which, void *arg) {
     LIBEVENT_THREAD *me = arg;
@@ -767,13 +771,14 @@ void memcached_thread_init(int nthreads, void *arg) {
 
         threads[i].notify_receive_fd = fds[0];
         threads[i].notify_send_fd = fds[1];
-
+		/* 初始化worker线程 */
         setup_thread(&threads[i]);
         /* Reserve three fds for the libevent base, and two for the pipe */
         stats_state.reserved_fds += 5;
     }
 
     /* Create threads after we've done all the libevent setup. */
+	/* 启动worker线程 */
     for (i = 0; i < nthreads; i++) {
         create_worker(worker_libevent, &threads[i]);
     }
