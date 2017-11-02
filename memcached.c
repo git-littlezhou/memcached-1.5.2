@@ -4352,6 +4352,7 @@ static void process_command(conn *c, char *command) {
 
 /*
  * if we have a complete line in the buffer, process it.
+ * 尝试从输入缓冲rbuf中解析命令，并调用process_command处理
  */
 static int try_read_command(conn *c) {
     assert(c != NULL);
@@ -4534,10 +4535,16 @@ static enum try_read_result try_read_udp(conn *c) {
  * at the data I've got after a number of reallocs...
  *
  * @return enum try_read_result
+ * 从网络中尽可能地读入数据，并保存到连接的缓冲区rbuf中，接下来的try_read_command会从该缓冲区中解析命令并处理
  */
 static enum try_read_result try_read_network(conn *c) {
     enum try_read_result gotdata = READ_NO_DATA_RECEIVED;
     int res;
+	/*
+	 * To protect us from someone flooding a connection with bogus data causing
+	 * the connection to eat up all available memory, break out and start looking
+	 * at the data I've got after a number of reallocs...
+	 */
     int num_allocs = 0;
     assert(c != NULL);
 
