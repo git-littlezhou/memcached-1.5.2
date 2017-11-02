@@ -139,6 +139,7 @@ static enum transmit_result transmit(conn *c);
  * notify the listener thread of when to listen again.
  * Also, the clock timer could be broken out into its own thread and we
  * can block the listener via a condition.
+ * 设置定时器，每10ms检测一下看是否可以接收新连接，有连接close的时候会置allow_new_conns为true
  */
 static volatile bool allow_new_conns = true;
 static struct event maxconnsevent;
@@ -4620,6 +4621,7 @@ static bool update_event(conn *c, const int new_flags) {
 
 /*
  * Sets whether we are listening for new connections or not.
+ * 打开或者关闭listener的监听，当打开的描述符超过限制的时候关闭监听，然后设置定时器每10ms检测看能否继续监听
  */
 void do_accept_new_conns(const bool do_accept) {
     conn *next;
@@ -5279,7 +5281,7 @@ static int server_socket(const char *interface,
           perror("getaddrinfo()");
         return 1;
     }
-
+	// 尝试绑定、监听可用的接口，listen_conn保存所有监听连接信息
     for (next= ai; next; next= next->ai_next) {
         conn *listen_conn_add;
         if ((sfd = new_socket(next)) == -1) {
