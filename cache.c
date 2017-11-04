@@ -75,7 +75,7 @@ void* cache_alloc(cache_t *cache) {
     pthread_mutex_unlock(&cache->mutex);
     return ret;
 }
-// 从cache中申请一段固定大小(cache->bufsize)的内存，如果空闲列表中有空闲的，从空闲列表末尾拿一个返回，否则malloc一段新的内存
+// 从cache中申请一段固定大小(cache->bufsize)的内存，如果空闲列表中有空闲的，从空闲列表末尾拿一个返回，否则malloc申请一段新的内存
 void* do_cache_alloc(cache_t *cache) {
     void *ret;
     void *object;
