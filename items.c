@@ -973,7 +973,7 @@ item *do_item_get(const char *key, const size_t nkey, const uint32_t hv, conn *c
                 fprintf(stderr, " -nuked by flush");
             }
             was_found = 2;
-		// 如果item因超时需要淘汰掉
+		// 如果item因过期需要淘汰掉
         } else if (it->exptime != 0 && it->exptime <= current_time) {
             do_item_unlink(it, hv);
             do_item_remove(it);
