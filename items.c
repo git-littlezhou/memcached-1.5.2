@@ -376,7 +376,7 @@ bool item_size_ok(const size_t nkey, const int flags, const int nbytes) {
 
     return slabs_clsid(ntotal) != 0;
 }
-
+//将item插入到LRU队列头部，并更新对应hash桶下链表的长度和总的item大小
 static void do_item_link_q(item *it) { /* item is the new head */
     item **head, **tail;
     assert((it->it_flags & ITEM_SLABBED) == 0);
@@ -436,7 +436,7 @@ static void item_unlink_q(item *it) {
     do_item_unlink_q(it);
     pthread_mutex_unlock(&lru_locks[it->slabs_clsid]);
 }
-
+// 将item插入hash表，并插入到LRU队列头部
 int do_item_link(item *it, const uint32_t hv) {
     MEMCACHED_ITEM_LINK(ITEM_key(it), it->nkey, it->nbytes);
     assert((it->it_flags & (ITEM_LINKED|ITEM_SLABBED)) == 0);
@@ -544,7 +544,7 @@ void do_item_update(item *it) {
         }
     }
 }
-
+// 将旧的item删除回收，并插入新的item，实现repalce操作
 int do_item_replace(item *it, item *new_it, const uint32_t hv) {
     MEMCACHED_ITEM_REPLACE(ITEM_key(it), it->nkey, it->nbytes,
                            ITEM_key(new_it), new_it->nkey, new_it->nbytes);
