@@ -47,7 +47,7 @@ typedef struct {
     rel_time_t evicted_time;
 } itemstats_t;
 
-// 分配出去的item双向链表，按最后访问时间排序，相当了LRU队列
+// 分配出去的item双向链表，按最后访问时间排序，相当于LRU队列
 static item *heads[LARGEST_ID];
 static item *tails[LARGEST_ID];
 static itemstats_t itemstats[LARGEST_ID];
@@ -407,7 +407,7 @@ static void item_link_q_warm(item *it) {
     itemstats[it->slabs_clsid].moves_to_warm++;
     pthread_mutex_unlock(&lru_locks[it->slabs_clsid]);
 }
-//将item从LRU队列中删除，并更新对就hash桶下链表的长度和总的item大小
+//将item从LRU队列中删除，并更新对应hash桶下链表的长度和总的item大小
 static void do_item_unlink_q(item *it) {
     item **head, **tail;
     head = &heads[it->slabs_clsid];
