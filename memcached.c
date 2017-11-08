@@ -1061,7 +1061,7 @@ static void complete_nread_ascii(conn *c) {
     pthread_mutex_lock(&c->thread->stats.mutex);
     c->thread->stats.slab_stats[ITEM_clsid(it)].set_cmds++;
     pthread_mutex_unlock(&c->thread->stats.mutex);
-
+	// 判断data是不是以/r/n结尾，不是的话就是无效的
     if ((it->it_flags & ITEM_CHUNKED) == 0) {
         if (strncmp(ITEM_data(it) + it->nbytes - 2, "\r\n", 2) == 0) {
             is_valid = true;
