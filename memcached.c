@@ -1049,6 +1049,7 @@ static void out_of_memory(conn *c, char *ascii_error) {
  * we get here after reading the value in set/add/replace commands. The command
  * has been stored in c->cmd, and the item is ready in c->item.
  */
+// 数据读取完毕，做实际的set/add/replace等操作
 static void complete_nread_ascii(conn *c) {
     assert(c != NULL);
 
@@ -5003,6 +5004,7 @@ static void drive_machine(conn *c) {
                     break;
                 }
             } else {
+				// 如果data部分是item_chunk，则将数据读到item_chunk中
                 res = read_into_chunked_item(c);
                 if (res > 0)
                     break;
