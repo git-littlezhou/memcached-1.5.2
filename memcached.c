@@ -4973,6 +4973,7 @@ static void drive_machine(conn *c) {
 
             if (!c->item || (((item *)c->item)->it_flags & ITEM_CHUNKED) == 0) {
                 /* first check if we have leftovers in the conn_read buffer */
+				// 检查是否在conn_read中已经将部分data的数据读到了rbuf中了，如果是，将其copy到item的data部分，ritem指向了item的data
                 if (c->rbytes > 0) {
                     int tocopy = c->rbytes > c->rlbytes ? c->rlbytes : c->rbytes;
                     if (c->ritem != c->rcurr) {
@@ -4982,6 +4983,7 @@ static void drive_machine(conn *c) {
                     c->rlbytes -= tocopy;
                     c->rcurr += tocopy;
                     c->rbytes -= tocopy;
+					// 如果data的所有数据都读到了
                     if (c->rlbytes == 0) {
                         break;
                     }

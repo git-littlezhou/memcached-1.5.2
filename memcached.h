@@ -512,7 +512,7 @@ struct conn {
     /** which state to go into after finishing current write */
     enum conn_states  write_and_go;
     void   *write_and_free; /** free this memory after finishing writing */
-
+	// 指向下面item(527行)的data，rlbytes为data的大小
     char   *ritem;  /** when we read in an item's value, it goes here */
     int    rlbytes;
 
